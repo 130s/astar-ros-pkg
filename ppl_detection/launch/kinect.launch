@@ -1,0 +1,4 @@
+<launch> 
+   <include file="$(find openni_camera)/launch/openni_node.launch"/>
+   <node pkg="rviz" name="rviz" type="rviz" args="--display-config $(find trainer)/kinect_detect.vcg"/>
+</launch>
