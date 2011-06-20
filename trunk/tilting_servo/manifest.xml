@@ -1,0 +1,17 @@
+<package>
+  <description brief="tilting_servo">
+
+     A Dynamixel servo driver for tilting servo using in tilting laser scanners or any other continuous tilting mechanism.
+
+  </description>
+  <author>Soh De Loong</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/tilting_servo</url>
+    <depend package="tf"/>
+  <depend package="std_msgs"/>
+  <depend package="roscpp"/>
+  <depend package="actionlib_msgs"/>
+  <depend package="actionlib"/>
+</package>
+
