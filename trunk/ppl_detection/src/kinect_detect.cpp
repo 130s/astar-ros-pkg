@@ -14,9 +14,6 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Willow Garage, Inc. nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
  *
  *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -225,8 +222,41 @@ public:
      int orb = 0;
    
      for(int a = 0; a < obj_no; a++)
-     {
-        if(obj[a].ppc > 8000 && (obj[a].max_x - obj[a].min_x) < 2 && (obj[a].max_y - obj[a].min_y) < 2 && (obj[a].max_z - obj[a].min_z) < 2)
+     {        
+           for(int l = 0; l < max_tracker_no; l++)
+           {
+              if(tracker[l].pos_x == tracker[l].prev_x &&
+                 tracker[l].pos_y == tracker[l].prev_y &&
+                 tracker[l].pos_z == tracker[l].prev_z)                 
+                 {
+                    if(tracker[l].stationary <= 5000)
+                       tracker[l].stationary++;
+                    if(tracker[l].stationary > 300)
+                    {
+                        geometry_msgs::PolygonStamped zeropoly;
+                        zeropoly.header.frame_id = cloud->header.frame_id;
+                        draw_polygon(&zeropoly, 0, 0, 0, 0, 0, 0);
+                        poly_pub_[l].publish(zeropoly);
+                    }
+                 }
+
+              //if the point has not moved after 5000 frames stop tracking
+              if(tracker[l].stationary >= 5000)
+              {
+                 tracker[l].istracking = false;
+                 tracker[l].pos_x = 0;
+                 tracker[l].pos_y = 0;
+                 tracker[l].pos_z = 0;
+              }
+              tracker[l].vel_x = tracker[l].pos_x - tracker[l].prev_x;
+              tracker[l].vel_y = tracker[l].pos_y - tracker[l].prev_y;
+              tracker[l].vel_z = tracker[l].pos_z - tracker[l].prev_y;
+              tracker[l].prev_x = tracker[l].pos_x;
+              tracker[l].prev_y = tracker[l].pos_y;
+              tracker[l].prev_z = tracker[l].pos_z;              
+           }
+ 
+        if(obj[a].ppc > 2000 && (obj[a].max_x - obj[a].min_x) < 2 && (obj[a].max_y - obj[a].min_y) < 2 && (obj[a].max_z - obj[a].min_z) < 2)
         {
            pos_cloud.points.resize(cloud_no + 1);
            pos_cloud.points[cloud_no].x = obj[a].pos_x;
@@ -236,7 +266,7 @@ public:
            int tracking_no = 0;
            for(int l = 0; l < max_tracker_no; l++)
            {
-              if(tracker[l].pos_x == tracker[l].prev_x &&
+ /*             if(tracker[l].pos_x == tracker[l].prev_x &&
                  tracker[l].pos_y == tracker[l].prev_y &&
                  tracker[l].pos_z == tracker[l].prev_z)                 
                  {
@@ -247,26 +277,26 @@ public:
               //if the point has not moved after 50 frames stop tracking
               if(tracker[l].stationary >= 50)
                  tracker[l].istracking = false;
-
-              if(obj[a].pos_x > tracker[l].pos_x - 0.2 &&
-                 obj[a].pos_x < tracker[l].pos_x + 0.2 &&
-                 obj[a].pos_y > tracker[l].pos_y - 0.2 &&
-                 obj[a].pos_y < tracker[l].pos_y + 0.2 &&
-                 obj[a].pos_z > tracker[l].pos_z - 0.2 &&
-                 obj[a].pos_z < tracker[l].pos_z + 0.2 &&
+*/
+              if(obj[a].pos_x > tracker[l].pos_x - 0.4 &&
+                 obj[a].pos_x < tracker[l].pos_x + 0.4 &&
+                 obj[a].pos_y > tracker[l].pos_y - 0.4 &&
+                 obj[a].pos_y < tracker[l].pos_y + 0.4 &&
+                 obj[a].pos_z > tracker[l].pos_z - 0.4 &&
+                 obj[a].pos_z < tracker[l].pos_z + 0.4 &&
                  tracker[l].istracking == true && tracked == false)
               {
                  tracked = true;
                  tracking_no = l;
                  tracker[l].stationary = 0;
               }
-              tracker[l].vel_x = tracker[l].pos_x - tracker[l].prev_x;
+/*              tracker[l].vel_x = tracker[l].pos_x - tracker[l].prev_x;
               tracker[l].vel_y = tracker[l].pos_y - tracker[l].prev_y;
               tracker[l].vel_z = tracker[l].pos_z - tracker[l].prev_y;
               tracker[l].prev_x = tracker[l].pos_x;
               tracker[l].prev_y = tracker[l].pos_y;
               tracker[l].prev_z = tracker[l].pos_z;              
-              
+*/              
            }
 
            visualization_msgs::Marker text_obj;
@@ -297,6 +327,7 @@ public:
               tracker[tracking_no].pos_y = obj[a].pos_y;
               tracker[tracking_no].pos_z = obj[a].pos_z;
               draw_polygon(&poly, obj[a].max_x, obj[a].min_x, obj[a].max_y, obj[a].min_y, obj[a].max_z, obj[a].min_z);
+              poly_pub_[tracking_no].publish(poly);
               no_of_ppl++;
               people.human.resize(no_of_ppl);
               people.human[no_of_ppl - 1].tracking_no = tracking_no + 1;
@@ -322,6 +353,7 @@ public:
                  tracker[next_tracker].istracking = true;
                  tracker[next_tracker].stationary = 0;
                  draw_polygon(&poly, obj[a].max_x, obj[a].min_x, obj[a].max_y, obj[a].min_y, obj[a].max_z, obj[a].min_z);
+                 poly_pub_[next_tracker].publish(poly);
                  no_of_ppl++;
                  people.human.resize(no_of_ppl);
                  people.human[no_of_ppl - 1].tracking_no = tracking_no + 1;
@@ -345,12 +377,11 @@ public:
            obj[a].cloud.header.frame_id = cloud->header.frame_id;
            obj_pub_[orb].publish(obj[a].cloud);
            txt_pub_[orb].publish(text_obj);
-           poly_pub_[orb].publish(poly);
            orb++;
            cloud_no++;
         }
      }
-    
+     
      pos_pub_.publish(pos_cloud);
      people_pub_.publish(people);
      count++;
