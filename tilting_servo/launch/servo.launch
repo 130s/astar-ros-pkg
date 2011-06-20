@@ -1,0 +1,16 @@
+<launch>
+  <param name="/max_angle" value="195"/>
+  <param name="/min_angle" value="140"/>
+  <param name="/servo_speed" value="4"/>
+  <param name="/port" value="/dev/ttyUSB0"/>
+  <param name="/baudrate" value="57600"/>
+  <param name="/servo_id" value="2"/>
+  <param name="/stop" value="false"/>
+  <node pkg="servo" name="servo_action_client" type="servo_action_client"/>
+  <node pkg="servo" name="servo" type="servo_action_server"/>
+  <node pkg="servo" name="servotf" type="servotf"/>
+  <node pkg="servo" name="base_linktf" type="base_linktf"/>
+  <!-- <node pkg="hokuyo_node" name="hokuyo_node" type="hokuyo_node">
+    <param name="frame_id" type="string" value="laser_tilt_link"/>
+  </node> remove comment if launching hokuyo_node together-->
+</launch>

@@ -1,0 +1,9 @@
+#goal definition
+float32 angle
+int32 speed
+---
+#result definition
+float32 angle
+---
+#feedback
+float32 angle
